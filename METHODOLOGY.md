@@ -60,4 +60,5 @@ via a stratified transect for the actual bias analysis.
 | NAIP land cover + building (LiDAR-fused) + paved(road/parking) | ✅ done (`src/naip_segmentation.py`) |
 | 3-way RS-consensus vs OSM comparison | ◐ 2-way pipeline built; awaiting real OSM-2019 |
 
-See [`src/`](src) for code and [`outputs/`](outputs/README.md) for results.
+See [`src/`](src) for code, [`outputs/`](outputs/README.md) for results, and
+[METRICS.md](METRICS.md) for the comparison-metric design.
