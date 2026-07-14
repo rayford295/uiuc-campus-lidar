@@ -24,9 +24,9 @@ from pyproj import Transformer
 from shapely.geometry import shape, mapping
 from shapely.ops import transform as shp_transform
 
-HERE = "/Users/yifn/Downloads/uiuc_campus_lidar"
-SRC = os.path.join(HERE, "UIUC_campus_LiDAR_merged_2x2km.laz")
-OUT = os.path.join(HERE, "results"); os.makedirs(OUT, exist_ok=True)
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, "UIUC_campus_LiDAR_merged_2x2km.laz")
+OUT = os.path.join(ROOT, "outputs", "detection"); os.makedirs(OUT, exist_ok=True)
 RES = 0.5  # metres / cell
 
 h = laspy.open(SRC).header

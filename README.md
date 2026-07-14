@@ -12,9 +12,9 @@ the point cloud from I-GUIDE storage and runs everything top to bottom.
 
 | | |
 |---|---|
-| ![buildings](results/buildings_detected.png) | ![trees](results/trees_detected.png) |
+| ![buildings](outputs/detection/buildings_detected.png) | ![trees](outputs/detection/trees_detected.png) |
 | **1,312 building instances** (footprint + height) | **11,777 individual trees** (height + crown) |
-| ![fulltile](results/seg_fulltile.png) | ![confusion](results/seg_confusion.png) |
+| ![fulltile](outputs/segmentation/seg_fulltile.png) | ![confusion](outputs/segmentation/seg_confusion.png) |
 | **DGCNN** wall-to-wall semantic segmentation (whole 2×2 km) | val **OA 0.930 · mIoU 0.768** |
 
 ### Semantic segmentation models
@@ -45,12 +45,16 @@ pip install -r requirements.txt
 jupyter lab UIUC_campus_LiDAR_pipeline.ipynb   # run all cells
 ```
 
-Or the scripts directly (expect the `.laz` in this folder):
+Or the scripts directly (expect the `.laz` at the repo root):
 
 ```bash
-python detect_classical.py     # ground/DTM, buildings, trees  -> results/
-python dl_semseg.py            # PointNet semantic segmentation -> results/
+python src/classical_detection.py   # ground/DTM, buildings, trees  -> outputs/detection/
+python src/pointnet_semseg.py       # PointNet semantic seg (baseline) -> outputs/segmentation/
+python src/dgcnn_semseg.py          # DGCNN semantic seg + full-tile map -> outputs/segmentation/
 ```
+
+The segmentation scripts reuse `outputs/detection/dtm.tif` (height-above-ground) and a
+cached feature set, so run `classical_detection.py` first on a fresh checkout.
 
 Device is auto-selected **CUDA → Apple MPS → CPU**, so the notebook runs unchanged on a
 GPU server or a laptop. Full run ≈ 10–15 min on CPU/MPS.
@@ -58,19 +62,25 @@ GPU server or a laptop. Full run ≈ 10–15 min on CPU/MPS.
 ## Repository layout
 
 ```
-UIUC_campus_LiDAR_pipeline.ipynb   reproducible end-to-end notebook (download → results)
-detect_classical.py                classical instance detection (ground / buildings / trees)
-dl_semseg.py                       PointNet semantic segmentation (baseline, PyTorch)
-segmentation/
-  dl_segmentation.py               DGCNN (EdgeConv) semantic segmentation + full-tile map
-requirements.txt
-results/
+UIUC_campus_LiDAR_pipeline.ipynb   reproducible end-to-end notebook (download → outputs)
+src/
+  classical_detection.py           ground/DTM + building & tree instances
+  pointnet_semseg.py               PointNet semantic segmentation (baseline)
+  dgcnn_semseg.py                  DGCNN (EdgeConv) semantic segmentation + full-tile map
+metadata/
+  georeference.txt  encoding.txt  footprint.geojson    CRS / bbox / ASPRS codes (GIS · OSM)
+outputs/
   README.md                        methods & metrics write-up
-  buildings.geojson  trees.geojson footprint.geojson   (WGS84, for QGIS / JOSM)
-  *_detected.png  dl_*.png  seg_*.png                   example figures
-  dl_metrics.json  seg_metrics.json  detection_summary.json
-  dl_pointnet.pt  seg_dgcnn.pt                          trained model weights
+  detection/                       classical-detection results
+    buildings.geojson  trees.geojson                   (WGS84, for QGIS / JOSM)
+    coverage_dsm.png  ground_dtm.png  *_detected.png    figures
+    detection_summary.json
+  segmentation/                    deep-learning segmentation results
+    dl_*  (PointNet)   seg_*  (DGCNN)                   figures · metrics · weights
+requirements.txt   LICENSE
 ```
+Large / regenerable artifacts (`*.laz`, `outputs/**/*.tif`, feature cache) are gitignored —
+the notebook downloads the cloud and the scripts recreate the rest.
 
 ## Method (brief)
 

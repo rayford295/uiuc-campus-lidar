@@ -5,10 +5,10 @@ LOCAL geometric context (roof planes vs. scattered canopy), which the per-point
 PointNet cannot see -> sharper boundaries, higher IoU.
 
 Ground truth = ASPRS classification in the LAZ.  Spatial split (west train / east val).
-Reuses the cached, decimated feature set written by ../dl_semseg.py (results/dl_cache.npz);
-regenerates it if absent.
+Reuses the cached feature set written by pointnet_semseg.py
+(outputs/segmentation/dl_cache.npz).
 
-Outputs (../results/):
+Outputs (outputs/segmentation/):
   seg_dgcnn.pt        trained weights
   seg_metrics.json    DGCNN metrics + comparison vs PointNet baseline
   seg_confusion.png   validation confusion matrix
@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(HERE, "UIUC_campus_LiDAR_merged_2x2km.laz")
-OUT = os.path.join(HERE, "results")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC = os.path.join(ROOT, "UIUC_campus_LiDAR_merged_2x2km.laz")
+OUT = os.path.join(ROOT, "outputs", "segmentation"); os.makedirs(OUT, exist_ok=True)
 CACHE = os.path.join(OUT, "dl_cache.npz")
 RES, BLOCK, NPTS, K = 0.5, 40.0, 2048, 16
 CLASS_MAP = {2:0, 3:1, 4:2, 5:3, 6:4}
@@ -40,7 +40,7 @@ nx = int(round((xmax-xmin)/RES)); ny = int(round((ymax-ymin)/RES))
 
 # ---------------------------------------------------------- load cached features
 if not os.path.exists(CACHE):
-    raise SystemExit("run ../dl_semseg.py first to build results/dl_cache.npz")
+    raise SystemExit("run src/pointnet_semseg.py first to build outputs/segmentation/dl_cache.npz")
 d = np.load(CACHE)
 X, Y, Z, HAG, INT, RR, NR, LAB = (d[k] for k in ["X","Y","Z","HAG","INT","RR","NR","LAB"])
 print(f"[data] {len(X):,} points | device={dev}")
