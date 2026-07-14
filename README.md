@@ -14,10 +14,22 @@ the point cloud from I-GUIDE storage and runs everything top to bottom.
 |---|---|
 | ![buildings](results/buildings_detected.png) | ![trees](results/trees_detected.png) |
 | **1,312 building instances** (footprint + height) | **11,777 individual trees** (height + crown) |
-| ![prediction](results/dl_prediction.png) | ![confusion](results/dl_confusion.png) |
-| PointNet semantic segmentation (val = east half) | **OA 0.913 · mIoU 0.707** |
+| ![fulltile](results/seg_fulltile.png) | ![confusion](results/seg_confusion.png) |
+| **DGCNN** wall-to-wall semantic segmentation (whole 2×2 km) | val **OA 0.930 · mIoU 0.768** |
 
-Per-class IoU: Ground 0.96 · High Veg 0.85 · Building 0.78 · Med Veg 0.57 · Low Veg 0.39.
+### Semantic segmentation models
+
+Two point-cloud networks predict the five ASPRS classes from geometry + features, both
+with a **spatial** west-train / east-val split (no leakage). Height-above-ground is the
+key engineered feature.
+
+| Model | OA | mIoU | Ground | Low Veg | Med Veg | High Veg | Building |
+|-------|----|------|--------|---------|---------|----------|----------|
+| PointNet (baseline) | 0.913 | 0.707 | 0.96 | 0.39 | 0.57 | 0.85 | 0.78 |
+| **DGCNN (EdgeConv)** | **0.930** | **0.768** | 0.95 | **0.49** | **0.70** | **0.88** | **0.82** |
+
+DGCNN's dynamic k-NN graph gives each point **local geometric context**, sharpening
+building edges and improving every vegetation class over the per-point PointNet.
 
 ## Data
 
@@ -48,14 +60,16 @@ GPU server or a laptop. Full run ≈ 10–15 min on CPU/MPS.
 ```
 UIUC_campus_LiDAR_pipeline.ipynb   reproducible end-to-end notebook (download → results)
 detect_classical.py                classical instance detection (ground / buildings / trees)
-dl_semseg.py                       PointNet semantic segmentation (PyTorch)
+dl_semseg.py                       PointNet semantic segmentation (baseline, PyTorch)
+segmentation/
+  dl_segmentation.py               DGCNN (EdgeConv) semantic segmentation + full-tile map
 requirements.txt
 results/
   README.md                        methods & metrics write-up
   buildings.geojson  trees.geojson footprint.geojson   (WGS84, for QGIS / JOSM)
-  *_detected.png  dl_*.png                             example figures
-  dl_metrics.json  detection_summary.json
-  dl_pointnet.pt                   trained model weights
+  *_detected.png  dl_*.png  seg_*.png                   example figures
+  dl_metrics.json  seg_metrics.json  detection_summary.json
+  dl_pointnet.pt  seg_dgcnn.pt                          trained model weights
 ```
 
 ## Method (brief)

@@ -1,0 +1,18 @@
+{
+  "model": "DGCNN",
+  "params_M": 0.332,
+  "device": "mps",
+  "overall_accuracy": 0.9297,
+  "mean_IoU": 0.7677,
+  "per_class_IoU": {
+    "Ground": 0.9502,
+    "Low Veg": 0.4906,
+    "Med Veg": 0.7021,
+    "High Veg": 0.8779,
+    "Building": 0.8176
+  },
+  "baseline_pointnet": {
+    "overall_accuracy": 0.9133,
+    "mean_IoU": 0.7074
+  }
+}
