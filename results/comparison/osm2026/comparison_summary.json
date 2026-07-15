@@ -1,0 +1,13 @@
+{
+  "reference": "osm_buildings_2026.geojson",
+  "iou_threshold": 0.3,
+  "lidar_buildings": 1312,
+  "reference_buildings": 1657,
+  "matched": 1074,
+  "completeness_count": 0.8186,
+  "completeness_area": 0.9181,
+  "reference_commission": 0.3349,
+  "lidar_only_omissions": 238,
+  "reference_only": 555,
+  "median_matched_iou": 0.765
+}

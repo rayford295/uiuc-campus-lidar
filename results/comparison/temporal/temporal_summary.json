@@ -1,0 +1,14 @@
+{
+  "lidar_buildings": 1312,
+  "osm2019_buildings": 1121,
+  "osm2026_buildings": 1657,
+  "mapped_2019": 765,
+  "gaps_2019": 547,
+  "filled_by_2026": 352,
+  "still_unmapped": 195,
+  "gap_fill_rate": 0.6435,
+  "completeness_2019_count": 0.5831,
+  "completeness_2026_count": 0.8186,
+  "completeness_2019_area": 0.7941,
+  "completeness_2026_area": 0.9181
+}

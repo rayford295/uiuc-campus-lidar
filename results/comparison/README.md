@@ -30,6 +30,30 @@ Three findings (`comparison_map.png`):
    complex footprints (IoU < 0.3 despite overlap), structures below the LiDAR detection
    threshold, and mapping errors — not automatically OSM commission in the map-error sense.
 
+## OSM 2019 vs OSM 2026 — temporal validation (`osm2026/`, `temporal/`)
+
+Current OSM (fetched via Overpass, `src/fetch_osm_current.py` →
+`data/osm_buildings_2026.geojson`) run against the same 2019 LiDAR truth
+(`src/vgi_comparison.py data/osm_buildings_2026.geojson osm2026`), plus a per-building
+gap-tracking analysis (`src/temporal_validation.py` → `temporal/`):
+
+| OSM snapshot | buildings | completeness (count) | completeness (area) | LiDAR-only |
+|---|---|---|---|---|
+| 2019 | 1,121 | 58.3% | 79.4% | 547 |
+| 2026 | 1,657 | **81.9%** | **91.8%** | 238 |
+
+**64% of the 2019 gaps (352 / 547) have since been filled by the community**
+(`temporal/temporal_evolution.png`). Those buildings existed in the 2019 LiDAR and were
+mapped later — so the 2019 omissions were genuine community under-mapping, not
+buildings that didn't exist yet. This validates the bias measurement and shows OSM
+completeness is strongly time-dependent: the eastern residential strip, nearly empty in
+2019, is now largely mapped.
+
+Caveats for the 2026-vs-2019-LiDAR numbers: (a) the 195 still-unmapped buildings may
+include structures demolished after the 2019 flight (unmappable today); (b) the higher
+2026 commission (33.5%) includes post-2019 construction that the 2019 LiDAR cannot
+confirm. Temporal alignment (2019 vs 2019) remains the defensible headline comparison.
+
 ## Per-pixel comparison (`pixel/`, `src/pixel_comparison.py`)
 
 Rasterizes both layers to a 0.2 m grid (see below for why not 0.1 m) and records a

@@ -41,10 +41,14 @@ python src/vgi_comparison.py data/osm_buildings_2019.geojson
 
 OSM captures the large institutional buildings (hence 79% by area) but misses 547 small
 structures, and completeness collapses to **< 0.3 on the eastern residential strip** —
-a sharp spatial-bias gradient inside a single 2 × 2 km tile. Details:
-[results/comparison/](results/comparison/README.md). Full Illinois statewide OSM
-(1.20 M buildings, 765 K roads) for scaling the gradient is on the
-[`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
+a sharp spatial-bias gradient inside a single 2 × 2 km tile.
+
+**Temporal validation:** against current OSM (2026), completeness rises to 81.9% / 91.8%
+— **64% of the 2019 gaps have since been filled by the community**, confirming they were
+genuine omissions (the buildings were in the 2019 LiDAR all along), not yet-unbuilt
+structures. Details and caveats: [results/comparison/](results/comparison/README.md).
+Full Illinois statewide OSM (1.20 M buildings, 765 K roads) for scaling the gradient is
+on the [`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
 
 ## Quick start
 

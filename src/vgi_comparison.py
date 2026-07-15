@@ -9,8 +9,10 @@ passed as argv[1]) via IoU, then reports:
   - a gridded completeness surface                                   -> the spatial-bias map
   - omissions.geojson      = LiDAR buildings absent from reference    -> the "correction" layer
 
-Usage:  python src/vgi_comparison.py [reference.shp|.geojson]
+Usage:  python src/vgi_comparison.py <reference.shp|.geojson> [output_subdir]
 Both layers are reprojected to EPSG:6350 (equal-area metres) before matching.
+With output_subdir, results go to results/comparison/<output_subdir>/ so runs against
+different references (e.g. OSM 2019 vs current OSM) can coexist.
 
 NOTE: with a LiDAR-derived reference this is a cross-method check / pipeline test,
 NOT the OSM-vs-LiDAR result. Swap argv[1] for real OSM-2019 buildings for the study.
@@ -21,7 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "comparison"); os.makedirs(OUT, exist_ok=True)
+OUT = os.path.join(ROOT, "results", "comparison", *(sys.argv[2:3])); os.makedirs(OUT, exist_ok=True)
 LIDAR = os.path.join(ROOT, "results", "detection", "buildings.geojson")
 REF = sys.argv[1] if len(sys.argv) > 1 else None
 if not REF or not os.path.exists(REF):
