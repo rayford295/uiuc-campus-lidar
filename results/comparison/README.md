@@ -94,6 +94,21 @@ Findings (`roads_2019.png`, `roads_2026.png`):
    streets/footways (eastern strip) read as "unsupported" — a false alarm LiDAR does not
    suffer from; and unpaved `path`/`track` ways legitimately lack pavement support.
 
+### Road network evolution 2019 → 2026 (`../temporal/roads_evolution.png`, `src/road_evolution.py`)
+
+Every 2026 way is classified as *existed in 2019* (≥50% of its length within 5 m of the
+2019 network) or *added*; added ways are then checked against the **2019** NAIP pavement:
+
+| added ways | added length | already paved in 2019 | no 2019 evidence | 2019 ways gone |
+|---|---|---|---|---|
+| 440 | 20.6 km | **16.5 km (80%)** — filled gaps | 4.2 km | 116 (4.8 km) |
+
+**80% of the length added to OSM since 2019 was already paved in the 2019 imagery** —
+the same gap-fill logic as buildings (64%): the network existed, the map lagged. Blue
+additions concentrate in the NE residential quarter, the same under-mapped area the
+building analysis flagged. The 4.2 km without 2019 evidence is post-2019 construction,
+unpaved ways, or canopy-hidden pavement; the 116 vanished ways are deletions/redraws.
+
 ## Pipeline validation (previous run, kept for the record)
 
 Before the OSM run, the same pipeline was validated against an independent LiDAR-derived

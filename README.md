@@ -50,9 +50,11 @@ structures.
 
 **Roads** (vs the NAIP paved layer — LiDAR has no road class): 91% of OSM 2019 way
 length has pavement evidence, so roads were already well-mapped where buildings were not;
-2026 adds micro-mapping detail (+60% segments, +8% length). Unexplained pavement is
-mostly parking, and canopy-shaded streets are a known optical false alarm.
-Details and caveats: [results/comparison/](results/comparison/README.md).
+2026 adds micro-mapping detail (+60% segments, +8% length), and **80% of the added
+length was already paved in the 2019 imagery** — filled gaps, mirroring the buildings
+story. Unexplained pavement is mostly parking, and canopy-shaded streets are a known
+optical false alarm. Details and caveats:
+[results/comparison/](results/comparison/README.md).
 Full Illinois statewide OSM (1.20 M buildings, 765 K roads) for scaling the gradient is
 on the [`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
 

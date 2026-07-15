@@ -1,0 +1,37 @@
+{
+  "ways_2019": 3383,
+  "ways_2026": 5402,
+  "km_2019": 246.29,
+  "km_2026": 266.67,
+  "existed_2019": 4962,
+  "km_existed": 246.05,
+  "added_by_2026": 440,
+  "km_added": 20.62,
+  "added_paved_in_2019": 329,
+  "km_added_paved": 16.47,
+  "added_no_2019_evidence": 111,
+  "km_added_no_evidence": 4.15,
+  "gap_fill_share_of_added_km": 0.7987,
+  "ways_2019_gone_by_2026": 116,
+  "km_gone": 4.82,
+  "added_by_class": {
+    "corridor": {
+      "n": 19,
+      "km": 0.8
+    },
+    "cycleway": {
+      "n": 20,
+      "km": 1.1
+    },
+    "footway": {
+      "n": 198,
+      "km": 8.77
+    },
+    "service": {
+      "n": 189,
+      "km": 9.32
+    }
+  },
+  "match_tolerance_m": 5.0,
+  "support_threshold": 0.5
+}
