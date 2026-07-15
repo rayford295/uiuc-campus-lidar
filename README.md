@@ -46,12 +46,28 @@ The committed run in `outputs/comparison/` is a **pipeline test against a LiDAR-
 reference** (cross-method check, 99.8% agreement) — see that folder's README. The real
 OSM comparison, over an urban→rural gradient where bias actually varies, is the next step.
 
+**The 2019 OSM data is now in hand** (temporally matched to the 2019 LiDAR acquisition):
+campus-extent subsets are committed at the repo root — `osm_buildings_2019.geojson`
+(1,121 buildings vs 1,312 LiDAR-detected instances) and `osm_roads_2019.geojson`
+(3,614 segments) — and the full Illinois statewide shapefiles (1.20 M buildings,
+765 K roads) are archived as
+[release `osm-il-2019`](https://github.com/rayford295/uiuc-campus-lidar/releases/tag/osm-il-2019)
+for scaling the analysis across the urban→rural gradient. The broader research framing
+(evaluating & calibrating VGI with multimodal remote sensing) is in
+[`PROJECT_DESCRIPTION.md`](PROJECT_DESCRIPTION.md).
+
 ## Data
 
 - **Source:** USGS 3DEP Lidar Point Cloud, `IL_8County_PlusChampaign_2019_B19` (QL1), 4 × 1 km tiles.
 - **CRS:** NAD83(2011) / Conus Albers metres (EPSG:6350); vertical NAVD88 Geoid12B (EPSG:5703).
 - **Extent (WGS84):** `-88.2402753, 40.0990944, -88.2147506, 40.1183436` (centre ≈ UIUC Main Quad).
 - The point cloud is **not** in this repo (336 MB); the notebook fetches it from I-GUIDE.
+- **OSM 2019 (VGI layer):** Illinois statewide shapefile extracts, WGS84 —
+  1,197,659 building polygons and 765,328 road lines with `osm_id`, `lastchange`,
+  `fclass`, and county-join attributes. Too large for git (zips 138/108 MB), so they live
+  as assets on [release `osm-il-2019`](https://github.com/rayford295/uiuc-campus-lidar/releases/tag/osm-il-2019).
+  Campus-bbox subsets (`osm_buildings_2019.geojson`, `osm_roads_2019.geojson`) are
+  committed at the repo root and feed `src/vgi_comparison.py` directly.
 
 ## Run it
 
@@ -97,6 +113,9 @@ outputs/
     dl_*  (PointNet)   seg_*  (DGCNN)                   figures · metrics · weights
   comparison/                      VGI-vs-LiDAR building comparison (+ README caveats)
   naip/                            NAIP land-cover / building / paved segmentation
+osm_buildings_2019.geojson         OSM 2019 buildings, campus bbox (VGI layer under evaluation)
+osm_roads_2019.geojson             OSM 2019 roads, campus bbox
+PROJECT_DESCRIPTION.md             research framing: evaluating & calibrating VGI with RS
 requirements.txt   LICENSE
 ```
 Large / regenerable artifacts (`*.laz`, `outputs/**/*.tif`, feature cache) are gitignored —
