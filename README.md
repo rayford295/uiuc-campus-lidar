@@ -23,18 +23,27 @@ USGS 3DEP QL1 point cloud (80.8 M points): classical detection (buildings, trees
 plus DGCNN semantic segmentation of the ASPRS classes (PointNet baseline OA 0.913 /
 mIoU 0.707 → DGCNN 0.930 / 0.768, spatial train/val split).
 
-## VGI comparison
+## VGI comparison — first result
 
-LiDAR footprints (corroborated by NAIP) are the ground truth; OSM `building=*` is
-evaluated against them — IoU matching → completeness → gridded bias map:
+LiDAR footprints (corroborated by NAIP) are the ground truth; OSM 2019 `building=*`
+(temporally matched to the LiDAR) is evaluated against them — IoU matching →
+completeness → gridded bias map:
 
 ```bash
 python src/vgi_comparison.py data/osm_buildings_2019.geojson
 ```
 
-OSM 2019 (temporally matched to the LiDAR): campus subsets in `data/` — 1,121 buildings
-vs 1,312 LiDAR instances, 3,614 road segments. Full Illinois statewide extracts
-(1.20 M buildings, 765 K roads) on the
+![OSM vs LiDAR comparison](results/comparison/comparison_map.png)
+
+| completeness (count) | completeness (area) | OSM commission | pixel IoU (0.2 m) | Cohen κ |
+|---|---|---|---|---|
+| **58.3%** | **79.4%** | 29.5% | 0.698 | 0.774 |
+
+OSM captures the large institutional buildings (hence 79% by area) but misses 547 small
+structures, and completeness collapses to **< 0.3 on the eastern residential strip** —
+a sharp spatial-bias gradient inside a single 2 × 2 km tile. Details:
+[results/comparison/](results/comparison/README.md). Full Illinois statewide OSM
+(1.20 M buildings, 765 K roads) for scaling the gradient is on the
 [`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
 
 ## Quick start

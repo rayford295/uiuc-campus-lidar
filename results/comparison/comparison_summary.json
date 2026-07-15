@@ -1,13 +1,13 @@
 {
-  "reference": "UIUC_Building_Footprints.shp",
+  "reference": "osm_buildings_2019.geojson",
   "iou_threshold": 0.3,
   "lidar_buildings": 1312,
-  "reference_buildings": 1395,
-  "matched": 1309,
-  "completeness_count": 0.9977,
-  "completeness_area": 0.9997,
-  "reference_commission": 0.0437,
-  "lidar_only_omissions": 3,
-  "reference_only": 61,
-  "median_matched_iou": 0.94
+  "reference_buildings": 1121,
+  "matched": 765,
+  "completeness_count": 0.5831,
+  "completeness_area": 0.7941,
+  "reference_commission": 0.2953,
+  "lidar_only_omissions": 547,
+  "reference_only": 331,
+  "median_matched_iou": 0.783
 }

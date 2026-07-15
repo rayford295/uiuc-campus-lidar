@@ -1,46 +1,62 @@
-# comparison/ — VGI-vs-LiDAR building comparison
+# comparison/ — OSM 2019 vs LiDAR building comparison
 
 Produced by [`../../src/vgi_comparison.py`](../../src/vgi_comparison.py). Matches
-LiDAR-detected building footprints against a **reference** building layer via IoU
-(threshold 0.3, in EPSG:6350), and reports completeness (recall), commission, a gridded
-completeness surface (the spatial-bias map), and an `omissions.geojson` layer
-(LiDAR buildings absent from the reference).
+LiDAR-detected building footprints (the remote-sensing ground truth) against **OSM 2019
+`building=*`** via IoU (threshold 0.3, EPSG:6350), and reports completeness (recall),
+commission, a gridded completeness surface (the spatial-bias map), and an
+`omissions.geojson` layer (LiDAR buildings absent from OSM — the correction targets).
 
-## ⚠️ Current run is a PIPELINE TEST, not the VGI result
-The reference layer used here is a **LiDAR-derived** ArcGIS building extraction
-(`ObjectCode=6`, `MIN_Z/MAX_Z`, same tile bounds), **not OSM**. So the numbers below are a
-**cross-method check** (our detection vs an independent LiDAR extraction), which is why
-agreement is near-total:
+```bash
+python src/vgi_comparison.py data/osm_buildings_2019.geojson
+```
 
-| completeness (count) | completeness (area) | median IoU | LiDAR-only | reference-only |
-|---|---|---|---|---|
-| 99.8% | 100.0% | 0.94 | 3 | 61 |
+## Result — OSM 2019, campus tile (2 × 2 km)
 
-This validates (a) our building detection and (b) the matching pipeline. It is **not**
-evidence about OSM completeness.
+| completeness (count) | completeness (area) | median IoU | LiDAR-only | OSM-only | OSM commission |
+|---|---|---|---|---|---|
+| **58.3%** | **79.4%** | 0.78 | 547 | 331 | 29.5% |
+
+Three findings (`comparison_map.png`):
+
+1. **OSM maps the big buildings, misses the small ones.** Area completeness (79%) far
+   exceeds count completeness (58%): the 547 omissions are dominated by small structures —
+   garages, sheds, outbuildings.
+2. **The spatial-bias gradient is real and visible even within one tile.** The 250 m
+   completeness surface drops from ~1.0 over the institutional campus core to **< 0.3 on
+   the eastern residential strip**, where whole blocks of houses are absent from OSM 2019.
+   Urban-core vs residential mapping effort differs sharply — exactly the bias this
+   project targets, before even extending to a rural gradient.
+3. **OSM-only features (331) need per-case interpretation**: geometry mismatches on
+   complex footprints (IoU < 0.3 despite overlap), structures below the LiDAR detection
+   threshold, and mapping errors — not automatically OSM commission in the map-error sense.
 
 ## Per-pixel comparison (`pixel/`, `src/pixel_comparison.py`)
-Rasterizes both building layers to a fine grid and records a per-pixel agreement category
-(both / LiDAR-only / reference-only / neither) → `pixel_diff_<res>.tif` (load in
-ArcGIS/QGIS to inspect any pixel), plus metrics and a zoom crop.
 
-| res | pixels | building-pixel IoU | pixel OA | Cohen κ | disagreement |
-|-----|--------|-------------------|----------|---------|--------------|
-| 0.2 m | 100 M | 0.9612 | 0.9907 | 0.9741 | 37,306 m² |
-| 0.1 m | 400 M | 0.9612 | 0.9907 | 0.9741 | 37,255 m² |
+Rasterizes both layers to a 0.2 m grid (see below for why not 0.1 m) and records a
+per-pixel agreement category (both / LiDAR-only / OSM-only / neither) →
+`pixel_diff_0p2m.tif` (inspect any pixel in ArcGIS/QGIS), plus metrics and a zoom crop.
 
-**0.1 m and 0.2 m give identical metrics** — because both footprint layers are polygons
-extracted at ≥0.5 m, a 0.1 m grid only resamples the same edges (no new information) at 4×
-the file size. Disagreement (~37,300 m², ~4% of building area) is a **thin edge fringe**
-(zoom crop); interiors agree 100%. Point density (20 pts/m², 0.22 m spacing) means 0.1 m
-is only meaningful for polygon rasterization, not point-derived surfaces (~82% empty pixels).
-→ **0.2 m is the sensible fine output; going to 0.1 m buys nothing here.** Genuinely finer
-footprints would require re-detecting from points at ~0.2 m, not resampling.
+| res | building-pixel IoU | pixel OA | Cohen κ | LiDAR-only | OSM-only |
+|-----|--------------------|----------|---------|------------|----------|
+| 0.2 m | 0.698 | 0.924 | 0.774 | 234,830 m² | 70,931 m² |
 
-## For the actual study
-1. Supply **OSM `building=*` polygons** as the reference:
-   `python src/vgi_comparison.py data/osm_buildings_2019.geojson`
-   — use the **2019** snapshot (temporally matched to the LiDAR), not 2026.
-2. This 2×2 km campus tile is ~fully mapped in OSM, so completeness will sit near 100%
-   here regardless. The **spatial-bias signal** only emerges over an urban→rural gradient;
-   extend the study area accordingly.
+`pixel_disagreement_0p2m.png` corroborates the instance-level story: outside the eastern
+residential strip (solid red = entire missing houses), disagreement is mostly a thin
+edge fringe plus scattered whole small structures.
+
+## Pipeline validation (previous run, kept for the record)
+
+Before the OSM run, the same pipeline was validated against an independent LiDAR-derived
+building extraction (cross-method check): completeness 99.8% (count) / 100.0% (area),
+median IoU 0.94, pixel IoU 0.961, κ 0.974, with disagreement confined to a ~37,000 m²
+edge fringe. 0.1 m and 0.2 m grids gave identical metrics (both layers are ≥0.5 m polygon
+products), so 0.2 m is the standard resolution. This confirms the differences reported
+above are OSM effects, not pipeline artifacts. (Artifacts of that run live in git history,
+commit `c0038f0` and earlier.)
+
+## Next step
+
+Scale beyond the campus tile: the statewide OSM 2019 extracts
+([release `osm-il-2019`](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019))
+cover the full urban→rural gradient; the LiDAR side requires additional
+`IL_8County_PlusChampaign_2019_B19` tiles along that gradient.

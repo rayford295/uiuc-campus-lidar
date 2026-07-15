@@ -4,11 +4,11 @@
     10000,
     10000
   ],
-  "building_pixel_IoU": 0.9612,
-  "pixel_agreement_OA": 0.9907,
-  "cohen_kappa": 0.9741,
-  "agree_building_m2": 923644.6,
-  "lidar_only_m2": 18154.7,
-  "reference_only_m2": 19151.4,
-  "disagreement_m2": 37306.0
+  "building_pixel_IoU": 0.6981,
+  "pixel_agreement_OA": 0.9236,
+  "cohen_kappa": 0.7741,
+  "agree_building_m2": 706968.8,
+  "lidar_only_m2": 234830.5,
+  "reference_only_m2": 70931.2,
+  "disagreement_m2": 305761.7
 }

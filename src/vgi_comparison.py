@@ -106,6 +106,6 @@ im = ax[1].imshow(comp, origin="lower", extent=[xmin,xmax,ymin,ymax], cmap="RdYl
 ax[1].set_title(f"Reference completeness surface ({GRID:.0f} m grid) — the spatial-bias map")
 plt.colorbar(im, ax=ax[1], shrink=.7, label="fraction of LiDAR building area captured")
 ax[1].ticklabel_format(style="plain")
-fig.suptitle("VGI (reference) vs LiDAR building comparison  —  pipeline test", fontsize=13)
+fig.suptitle(f"VGI vs LiDAR building comparison  —  reference: {os.path.basename(REF)}", fontsize=13)
 fig.tight_layout(); fig.savefig(os.path.join(OUT,"comparison_map.png"), dpi=130); plt.close(fig)
 print("done ->", OUT)
