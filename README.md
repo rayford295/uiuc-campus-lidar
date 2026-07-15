@@ -2,8 +2,9 @@
 
 Volunteered Geographic Information (VGI) such as OpenStreetMap is accurate in well-mapped
 urban areas but incomplete in data-sparse regions. This project evaluates and calibrates
-VGI using multimodal remote sensing (LiDAR + aerial imagery), starting from the UIUC
-campus and scaling toward an urban→rural gradient.
+VGI using multimodal remote sensing (LiDAR + aerial imagery) at two scales: a 2 × 2 km
+UIUC campus pilot with a full RS ground-truth pipeline, and a statewide 102-county
+Illinois analysis quantifying the urban→rural bias gradient.
 
 An [I-GUIDE Summer School 2026 project](https://i-guide.io/summer-school/summer-school-2026/summer-school-2026-projects/).
 Research questions and full framing: [docs/PROJECT_DESCRIPTION.md](docs/PROJECT_DESCRIPTION.md) ·
@@ -53,10 +54,40 @@ length has pavement evidence, so roads were already well-mapped where buildings 
 2026 adds micro-mapping detail (+60% segments, +8% length), and **80% of the added
 length was already paved in the 2019 imagery** — filled gaps, mirroring the buildings
 story. Unexplained pavement is mostly parking, and canopy-shaded streets are a known
-optical false alarm. Details and caveats:
-[results/comparison/](results/comparison/README.md).
-Full Illinois statewide OSM (1.20 M buildings, 765 K roads) for scaling the gradient is
-on the [`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
+optical false alarm. The vetted major-roads subset
+(`data/osm_roads_2019_major.geojson`, 154 segments) is **99.6% supported** — the
+all-class shortfall is entirely footways/steps under canopy, so major-way geometry is
+sound. Details and caveats: [results/comparison/](results/comparison/README.md).
+
+## Statewide scaling — the urban→rural bias gradient
+
+The same 2019 snapshot, scaled to **375,754 major-road segments (235,064 km) across all
+102 Illinois counties** (`src/statewide_bias.py`), tests whether OSM quality varies
+systematically with who lives there:
+
+![county-level completeness and recency](results/statewide/choropleth_completeness.png)
+![completeness vs population density](results/statewide/scatter_bias.png)
+
+| metric | Spearman ρ vs pop. density | urban mean | rural mean | campus tile |
+|---|---|---|---|---|
+| % maxspeed tagged | **0.50** | 3.1 | 1.2 | **26.0** |
+| % surface tagged | **0.60** | 2.5 | 1.6 | **37.7** |
+| % edited 2017+ | **0.70** | 29.9 | 9.3 | **94.2** |
+| road density (km/km²) | **0.71** | 3.60 | 1.31 | — |
+
+(all p < 0.001; urban = ≥ 100 persons/km²; campus = the major-roads clip)
+
+Three findings: **(1)** attribute completeness and edit recency are strongly
+urban-biased — several downstate counties have a median last-edit year of **2008**,
+untouched since the TIGER import, while Cook/DuPage/Will sit at 2016 and the campus
+tile at 2018; **(2)** geometric supply is near-complete everywhere (km per 1,000
+residents is *higher* in rural counties, ρ = −0.97) — in the US the bias lives in
+**attributes and currency, not in whether the line exists**; **(3)** the gradient is
+not smooth: Sangamon County (Springfield) is a single-contributor hotspot with 33.9%
+maxspeed tagging, 3–10× any other county. Full write-up:
+[results/statewide/](results/statewide/README.md).
+Statewide OSM extracts (1.20 M buildings, 765 K roads) are on the
+[`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
 
 ## Quick start
 
@@ -79,10 +110,10 @@ Device auto-selects CUDA → Apple MPS → CPU; a full run takes ≈ 10–15 min
 
 ```
 UIUC_campus_LiDAR_pipeline.ipynb   end-to-end reproducible notebook
-src/                               pipeline scripts (detection, segmentation, comparison, NAIP)
+src/                               pipeline scripts (detection, segmentation, comparison, NAIP, statewide)
 data/                              OSM 2019 campus subsets + CRS/bbox metadata
 docs/                              PROJECT_DESCRIPTION · METHODOLOGY · METRICS
-results/                           detection/ · segmentation/ · comparison/ · naip/  (+ write-up)
+results/                           detection/ · segmentation/ · comparison/ · naip/ · statewide/
 ```
 
 Large / regenerable artifacts (`.laz`, `.tif`, caches) are gitignored — the notebook
@@ -91,8 +122,11 @@ downloads the point cloud from I-GUIDE storage and the scripts recreate the rest
 ## Data sources
 
 - **LiDAR:** USGS 3DEP `IL_8County_PlusChampaign_2019_B19` (QL1), EPSG:6350 / NAVD88.
-- **OSM 2019:** Illinois statewide shapefiles (WGS84) — see the release above.
+- **OSM 2019:** Illinois statewide shapefiles (WGS84), incl. the county-joined major-roads
+  extract used by `src/statewide_bias.py` — see the release above.
 - **NAIP:** 4-band aerial imagery, ~0.7 m, fused with LiDAR for the impervious/paved layers.
+- **Census 2019:** county land area (gazetteer), population (`co-est2019`), and cartographic
+  boundaries — normalization covariates for the statewide analysis.
 
 ## License
 
