@@ -1,0 +1,34 @@
+{
+  "snapshot": "2019_major",
+  "segments": 154,
+  "length_km": 46.64,
+  "support_threshold": 0.5,
+  "supported_segments": 0.9935,
+  "supported_length": 0.9955,
+  "median_support": 0.935,
+  "paved_explained": 0.2056,
+  "by_class": {
+    "residential": {
+      "n": 104,
+      "km": 30.07,
+      "supported": 0.99
+    },
+    "tertiary": {
+      "n": 44,
+      "km": 12.56,
+      "supported": 1.0
+    }
+  },
+  "attributes": {
+    "pct_maxspeed": 26.0,
+    "pct_surface": 37.7,
+    "pct_name": 97.4
+  },
+  "attributes_statewide_county_mean": {
+    "pct_maxspeed": 1.44,
+    "pct_surface": 1.72,
+    "pct_name": 73.9
+  },
+  "median_edit_year": 2018,
+  "pct_edited_2017plus": 94.2
+}

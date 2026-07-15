@@ -105,7 +105,9 @@ def analyse(tag, path):
     return res
 
 import rasterio.plot  # noqa: E402  (used above for plotting_extent)
-out = {y: analyse(y, os.path.join(ROOT, "data", f"osm_roads_{y}.geojson")) for y in ("2019", "2026")}
-json.dump(out, open(os.path.join(OUT, "roads_summary.json"), "w"), indent=2)
-print(json.dumps({y: {k: v for k, v in r.items() if k != "by_class"} for y, r in out.items()}, indent=2))
-print("done ->", OUT)
+
+if __name__ == "__main__":
+    out = {y: analyse(y, os.path.join(ROOT, "data", f"osm_roads_{y}.geojson")) for y in ("2019", "2026")}
+    json.dump(out, open(os.path.join(OUT, "roads_summary.json"), "w"), indent=2)
+    print(json.dumps({y: {k: v for k, v in r.items() if k != "by_class"} for y, r in out.items()}, indent=2))
+    print("done ->", OUT)
