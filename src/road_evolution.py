@@ -54,10 +54,15 @@ def paved_fraction(geom):
                            rasterio.windows.Window(c0, r0, c1 - c0, r1 - r0), src.transform))
     return float(sub[m].mean()) if m.any() else np.nan
 
+def union_all(gdf):
+    """geopandas >= 1.0 renamed unary_union -> union_all; support both
+    (the I-GUIDE CyberGISX kernel ships Python 3.8 / geopandas <= 0.13)."""
+    return gdf.union_all() if hasattr(gdf, "union_all") else gdf.unary_union
+
 g19 = load(os.path.join(ROOT, "data", "osm_roads_2019.geojson"))
 g26 = load(os.path.join(ROOT, "data", "osm_roads_2026.geojson"))
-net19 = g19.union_all().buffer(MATCH_TOL)
-net26 = g26.union_all().buffer(MATCH_TOL)
+net19 = union_all(g19).buffer(MATCH_TOL)
+net26 = union_all(g26).buffer(MATCH_TOL)
 
 g26["frac_in19"] = g26.geometry.intersection(net19).length / g26.geometry.length
 g26["existed"] = g26["frac_in19"] >= MATCH_FRAC

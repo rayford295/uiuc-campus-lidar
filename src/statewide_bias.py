@@ -84,7 +84,10 @@ def main(roads_shp: str, aux_dir: str, out_dir: str) -> None:
 
     cols = ["osm_id", "fclass", "lastchange", "maxspeed", "surface", "ref",
             "loc_name", "CO_FIPS"]
-    roads = gpd.read_file(roads_shp, columns=cols)
+    try:
+        roads = gpd.read_file(roads_shp, columns=cols)
+    except TypeError:  # old geopandas / fiona engine has no `columns=`
+        roads = gpd.read_file(roads_shp)[cols + ["geometry"]]
     metrics = county_metrics(roads)
     counties = load_county_aux(aux)
     df = metrics.merge(counties, on="GEOID")
