@@ -1,0 +1,104 @@
+{
+  "top10": [
+    {
+      "GEOID": "17031",
+      "CTYNAME": "Cook County",
+      "POPESTIMATE2019": 5150233,
+      "pct_recent": 41.98887145099158,
+      "median_edit_year": 2016.0,
+      "staleness": 0.5801112854900842,
+      "exposure": 1.0,
+      "priority": 0.5801
+    },
+    {
+      "GEOID": "17097",
+      "CTYNAME": "Lake County",
+      "POPESTIMATE2019": 696535,
+      "pct_recent": 27.198013362502216,
+      "median_edit_year": 2013.0,
+      "staleness": 0.7280198663749778,
+      "exposure": 0.7223702402043346,
+      "priority": 0.5259
+    },
+    {
+      "GEOID": "17201",
+      "CTYNAME": "Winnebago County",
+      "POPESTIMATE2019": 282572,
+      "pct_recent": 12.886744252057904,
+      "median_edit_year": 2013.0,
+      "staleness": 0.871132557479421,
+      "exposure": 0.597176100717816,
+      "priority": 0.5202
+    },
+    {
+      "GEOID": "17119",
+      "CTYNAME": "Madison County",
+      "POPESTIMATE2019": 262966,
+      "pct_recent": 15.549965698605076,
+      "median_edit_year": 2013.0,
+      "staleness": 0.8445003430139493,
+      "exposure": 0.5871975003088143,
+      "priority": 0.4959
+    },
+    {
+      "GEOID": "17043",
+      "CTYNAME": "DuPage County",
+      "POPESTIMATE2019": 922921,
+      "pct_recent": 38.2373595505618,
+      "median_edit_year": 2016.0,
+      "staleness": 0.617626404494382,
+      "exposure": 0.7614230384975124,
+      "priority": 0.4703
+    },
+    {
+      "GEOID": "17143",
+      "CTYNAME": "Peoria County",
+      "POPESTIMATE2019": 179179,
+      "pct_recent": 15.219885277246654,
+      "median_edit_year": 2013.0,
+      "staleness": 0.8478011472275335,
+      "exposure": 0.5339607165125285,
+      "priority": 0.4527
+    },
+    {
+      "GEOID": "17163",
+      "CTYNAME": "St. Clair County",
+      "POPESTIMATE2019": 259686,
+      "pct_recent": 24.967837704106877,
+      "median_edit_year": 2013.0,
+      "staleness": 0.7503216229589312,
+      "exposure": 0.5854557516438841,
+      "priority": 0.4393
+    },
+    {
+      "GEOID": "17089",
+      "CTYNAME": "Kane County",
+      "POPESTIMATE2019": 532403,
+      "pct_recent": 37.297543221110104,
+      "median_edit_year": 2014.0,
+      "staleness": 0.627024567788899,
+      "exposure": 0.6850809407451413,
+      "priority": 0.4296
+    },
+    {
+      "GEOID": "17197",
+      "CTYNAME": "Will County",
+      "POPESTIMATE2019": 690743,
+      "pct_recent": 42.29080496341076,
+      "median_edit_year": 2016.0,
+      "staleness": 0.5770919503658924,
+      "exposure": 0.7212114998413988,
+      "priority": 0.4162
+    },
+    {
+      "GEOID": "17099",
+      "CTYNAME": "LaSalle County",
+      "POPESTIMATE2019": 108669,
+      "pct_recent": 11.17782909930716,
+      "median_edit_year": 2013.0,
+      "staleness": 0.8882217090069284,
+      "exposure": 0.4645659123004487,
+      "priority": 0.4126
+    }
+  ]
+}

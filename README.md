@@ -89,6 +89,34 @@ maxspeed tagging, 3–10× any other county. Full write-up:
 Statewide OSM extracts (1.20 M buildings, 765 K roads) are on the
 [`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
 
+## From detection to correction
+
+Detection is closed into a **propose → score → prioritize** loop, and — because the
+community filled 352 of the 547 detected gaps by 2026 — every proposal is scored
+against *what mappers actually drew*, with no manual labels. Three approaches are
+compared on the held-out east half (train west / eval east, as in Stage 2):
+
+| Approach | Geometry | Confidence | median IoU | AUC | precision@50 |
+|---|---|---|---|---|---|
+| **A** rules | regularized LiDAR footprint | threshold tiers | 0.677 | 0.742 | 0.62 |
+| **B** learned | U-Net (NAIP + CHM) | mask probability | 0.589 | 0.695 | 0.66 |
+| **C** hybrid ⭐ | same as A | GBM acceptance scorer | 0.677 | 0.738 | **0.84** |
+
+![proposals vs community](results/correction/proposal_gallery.png)
+
+Takeaways: with only 83 training gaps, **rules beat learning for geometry** (the raw
+LiDAR footprint is itself the best overlap, 0.691 — regularization trades a little
+IoU for OSM-style right angles), but the **learned scorer wins where it matters for
+a human-review queue**: of its top-50 proposals, 84% were later confirmed by the
+community (base rate 65%). Proposals carry OSM-ready tags (`building=yes`,
+`height=*`) but remain research artifacts per the OSM Automated Edits Code of
+Conduct — the 195 still-unmapped proposals are ranked for human review
+(`results/correction/deployment_map.png`), and a statewide
+staleness × population map says where to deploy first
+(`results/correction/deploy_priority.png`: Cook, Lake, Winnebago on top).
+Scripts: `src/propose_geometry.py` · `src/propose_learned.py` ·
+`src/acceptance_scorer.py` · `src/correction_benchmark.py` · `src/deploy_priority.py`.
+
 ## Quick start
 
 ```bash
@@ -139,7 +167,7 @@ VGI_Spatial_Bias_Pipeline.ipynb    end-to-end reproducible notebook (all stages,
 src/                               pipeline scripts (detection, segmentation, comparison, NAIP, statewide)
 data/                              OSM 2019 campus subsets + CRS/bbox metadata
 docs/                              PROJECT_DESCRIPTION · METHODOLOGY · METRICS
-results/                           detection/ · segmentation/ · comparison/ · naip/ · statewide/
+results/                           detection/ · segmentation/ · comparison/ · naip/ · statewide/ · correction/
 ```
 
 Large / regenerable artifacts (`.laz`, `.tif`, caches) are gitignored — the notebook
