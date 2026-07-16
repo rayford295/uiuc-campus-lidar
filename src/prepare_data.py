@@ -34,10 +34,14 @@ URLS = {
     "boundaries": "https://www2.census.gov/geo/tiger/GENZ2019/shp/cb_2019_us_county_20m.zip",
 }
 
+URLS["cs_lidar"] = f"{RELEASE}/colorado-springs-2019/cs_lidar_2km.laz"
+URLS["cs_naip"] = f"{RELEASE}/colorado-springs-2019/colorado_springs_NAIP_clipped_6350.tif"
+
 LAZ = os.path.join(ROOT, "UIUC_campus_LiDAR_merged_2x2km.laz")
 NAIP = os.path.join(DATA, "NAIP_image.tif")
 ROADS_SHP = os.path.join(STATEWIDE, "OSM_2019_Major_Roads",
                          "gis_osm_roads_2019_IL_Major_Roads.shp")
+CS_DATA = os.path.join(ROOT, "regions", "colorado_springs", "data")
 
 
 def fetch(url, dest):
@@ -105,7 +109,15 @@ def prepare_statewide():
             zf.extractall(cb)
 
 
-STEPS = {"lidar": prepare_lidar, "naip": prepare_naip, "statewide": prepare_statewide}
+def prepare_colorado():
+    """Second study region (LiDAR + clipped NAIP; OSM clips are committed)."""
+    print("[colorado]")
+    fetch(URLS["cs_lidar"], os.path.join(CS_DATA, "cs_lidar_2km.laz"))
+    fetch(URLS["cs_naip"], os.path.join(CS_DATA, "naip_cs_6350.tif"))
+
+
+STEPS = {"lidar": prepare_lidar, "naip": prepare_naip,
+         "statewide": prepare_statewide, "colorado": prepare_colorado}
 
 if __name__ == "__main__":
     for step in (sys.argv[1:] or STEPS):
