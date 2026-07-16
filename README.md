@@ -1,38 +1,63 @@
 # Detecting and Correcting Spatial Bias in VGI Using Remote Sensing
 
-Volunteered Geographic Information (VGI) such as OpenStreetMap is accurate in well-mapped
-urban areas but incomplete in data-sparse regions. This project evaluates and calibrates
-VGI using multimodal remote sensing (LiDAR + aerial imagery) at two scales: a 2 × 2 km
-UIUC campus pilot with a full RS ground-truth pipeline, and a statewide 102-county
-Illinois analysis quantifying the urban→rural bias gradient.
+Volunteered Geographic Information (VGI) such as OpenStreetMap is highly accurate where
+many people map and stale where few do. This project builds an end-to-end,
+fully reproducible pipeline that **detects** that bias with multimodal remote sensing
+(LiDAR + aerial imagery), **quantifies** it from a 2 × 2 km campus tile up to all 102
+Illinois counties, and **corrects** it — machine-proposing fixes that are validated
+against what the OSM community itself later mapped.
 
+▶ **Run everything**: [`VGI_Spatial_Bias_Pipeline.ipynb`](VGI_Spatial_Bias_Pipeline.ipynb)
+— one notebook, all stages, pre-executed with figures, runs unmodified on the
+[I-GUIDE JupyterHub](https://platform.i-guide.io).
 An [I-GUIDE Summer School 2026 project](https://i-guide.io/summer-school/summer-school-2026/summer-school-2026-projects/).
-Research questions and full framing: [docs/PROJECT_DESCRIPTION.md](docs/PROJECT_DESCRIPTION.md) ·
-comparison design: [docs/METHODOLOGY.md](docs/METHODOLOGY.md) · metrics: [docs/METRICS.md](docs/METRICS.md).
+Framing: [PROJECT_DESCRIPTION](docs/PROJECT_DESCRIPTION.md) ·
+[METHODOLOGY](docs/METHODOLOGY.md) · [METRICS](docs/METRICS.md).
 
-## Results
+## The pipeline
+
+```
+ LiDAR (USGS 3DEP) ──► 1 RS reference     buildings · trees · DTM (+ DGCNN segmentation)
+ NAIP (RGBN)       ──► 2 optical check    land cover · paved layer (LiDAR-fused)
+ OSM 2019 vs RS    ──► 3 detect           building omissions · road support · bias maps
+ OSM 2026          ──► 4 validate         did the community confirm our detections?
+ statewide + Census──► 5 scale            urban→rural quality gradient, 102 counties
+ all of the above  ──► 6 correct          propose → score → prioritize fixes
+```
+
+**Key findings at a glance**
+
+| # | Finding | Evidence |
+|---|---|---|
+| 1 | OSM omissions are real and spatially structured | 58.3% building completeness; < 0.3 on the residential strip |
+| 2 | Remote sensing sees them years early | 64% of 2019 gaps community-filled by 2026 |
+| 3 | Roads: geometry fine, attributes poor | 91–99.6% pavement support vs 3.3% maxspeed tagged statewide |
+| 4 | Quality follows contributors, not need | edit recency ρ = 0.70 with pop. density; downstate frozen at 2008 (TIGER) |
+| 5 | Correction works — and hybrid wins | proposal median IoU 0.68; learned scorer precision@50 = 0.84 (base 0.65) |
+
+---
+
+## 1 · Remote-sensing reference (campus tile)
+
+A reproducible pipeline over a merged 2 × 2 km USGS 3DEP QL1 point cloud (80.8 M
+points): classical detection (ground/DTM, building instances, individual trees) plus
+DGCNN semantic segmentation of the ASPRS classes (PointNet OA 0.913/mIoU 0.707 →
+**DGCNN 0.930/0.768**, spatial train/val split). NAIP adds the independent optical
+view; since optical imagery has no height, buildings and pavement are separated by
+fusing with the LiDAR footprints — the paved layer becomes the road reference.
 
 | | |
 |---|---|
 | ![buildings](results/detection/buildings_detected.png) | ![trees](results/detection/trees_detected.png) |
-| **1,312 building instances** from LiDAR (footprint + height) | **11,777 individual trees** (height + crown) |
+| **1,312 building instances** (footprint + height) | **11,777 individual trees** (height + crown) |
 | ![fulltile](results/segmentation/seg_fulltile.png) | ![naip](results/naip/naip_segmentation.png) |
-| **DGCNN** semantic segmentation, OA 0.930 · mIoU 0.768 | **NAIP** land cover, corroborating RS reference |
+| **DGCNN** segmentation, OA 0.930 · mIoU 0.768 | **NAIP** land cover, LiDAR-fused |
 
-The remote-sensing reference comes from a reproducible pipeline over a merged 2 × 2 km
-USGS 3DEP QL1 point cloud (80.8 M points): classical detection (buildings, trees, DTM)
-plus DGCNN semantic segmentation of the ASPRS classes (PointNet baseline OA 0.913 /
-mIoU 0.707 → DGCNN 0.930 / 0.768, spatial train/val split).
+## 2 · Detecting building omissions (OSM 2019 vs RS consensus)
 
-## VGI comparison — first result
-
-LiDAR footprints (corroborated by NAIP) are the ground truth; OSM 2019 `building=*`
-(temporally matched to the LiDAR) is evaluated against them — IoU matching →
-completeness → gridded bias map:
-
-```bash
-python src/vgi_comparison.py data/osm_buildings_2019.geojson
-```
+LiDAR footprints (corroborated by NAIP) are ground truth; the temporally matched
+OSM 2019 `building=*` snapshot is evaluated via IoU matching → completeness →
+gridded bias map:
 
 ![OSM vs LiDAR comparison](results/comparison/comparison_map.png)
 
@@ -40,61 +65,56 @@ python src/vgi_comparison.py data/osm_buildings_2019.geojson
 |---|---|---|---|---|
 | **58.3%** | **79.4%** | 29.5% | 0.698 | 0.774 |
 
-OSM captures the large institutional buildings (hence 79% by area) but misses 547 small
-structures, and completeness collapses to **< 0.3 on the eastern residential strip** —
-a sharp spatial-bias gradient inside a single 2 × 2 km tile.
+OSM captures the large institutional buildings (79% by area) but misses 547 small
+structures, and completeness collapses **below 0.3 on the eastern residential
+strip** — a sharp bias gradient inside one tile.
 
-**Temporal validation:** against current OSM (2026), completeness rises to 81.9% / 91.8%
-— **64% of the 2019 gaps have since been filled by the community**, confirming they were
-genuine omissions (the buildings were in the 2019 LiDAR all along), not yet-unbuilt
-structures.
+**Temporal validation.** Against OSM 2026 the completeness rises to 81.9%/91.8%:
+**the community itself filled 64% of our detected gaps (352/547)** — they were real
+omissions, present in the 2019 LiDAR all along. Remote sensing saw in 2019 what took
+volunteers seven more years. The 352 confirmations become free ground truth for the
+correction stage; the 195 still-unmapped become its deployment targets.
 
-**Roads** (vs the NAIP paved layer — LiDAR has no road class): 91% of OSM 2019 way
-length has pavement evidence, so roads were already well-mapped where buildings were not;
-2026 adds micro-mapping detail (+60% segments, +8% length), and **80% of the added
-length was already paved in the 2019 imagery** — filled gaps, mirroring the buildings
-story. Unexplained pavement is mostly parking, and canopy-shaded streets are a known
-optical false alarm. The vetted major-roads subset
-(`data/osm_roads_2019_major.geojson`, 154 segments) is **99.6% supported** — the
-all-class shortfall is entirely footways/steps under canopy, so major-way geometry is
-sound. Details and caveats: [results/comparison/](results/comparison/README.md).
+## 3 · Roads (OSM vs the NAIP paved layer)
 
-## Statewide scaling — the urban→rural bias gradient
+91% of OSM 2019 way length has pavement evidence — roads were already well-mapped
+where buildings were not — and the vetted major-roads subset is **99.6% supported**
+(the all-class shortfall is canopy-shaded footways/steps). The 2019→2026 additions
+are micro-mapping (+60% segments, +8% length) and **80% of added length was already
+paved in 2019**: gap-fill again. Details and caveats:
+[results/comparison/](results/comparison/README.md).
 
-The same 2019 snapshot, scaled to **375,754 major-road segments (235,064 km) across all
-102 Illinois counties** (`src/statewide_bias.py`), tests whether OSM quality varies
-systematically with who lives there:
+## 4 · Statewide scaling — the urban→rural gradient
+
+The same snapshot scaled to **375,754 major-road segments (235,064 km) across all
+102 Illinois counties**, normalized with Census 2019 data:
 
 ![county-level completeness and recency](results/statewide/choropleth_completeness.png)
 ![completeness vs population density](results/statewide/scatter_bias.png)
 
-| metric | Spearman ρ vs pop. density | urban mean | rural mean | campus tile |
+| metric | ρ vs pop. density | urban mean | rural mean | campus tile |
 |---|---|---|---|---|
 | % maxspeed tagged | **0.50** | 3.1 | 1.2 | **26.0** |
 | % surface tagged | **0.60** | 2.5 | 1.6 | **37.7** |
 | % edited 2017+ | **0.70** | 29.9 | 9.3 | **94.2** |
 | road density (km/km²) | **0.71** | 3.60 | 1.31 | — |
 
-(all p < 0.001; urban = ≥ 100 persons/km²; campus = the major-roads clip)
+(all p < 0.001; urban = ≥ 100 persons/km²)
 
-Three findings: **(1)** attribute completeness and edit recency are strongly
-urban-biased — several downstate counties have a median last-edit year of **2008**,
-untouched since the TIGER import, while Cook/DuPage/Will sit at 2016 and the campus
-tile at 2018; **(2)** geometric supply is near-complete everywhere (km per 1,000
-residents is *higher* in rural counties, ρ = −0.97) — in the US the bias lives in
-**attributes and currency, not in whether the line exists**; **(3)** the gradient is
-not smooth: Sangamon County (Springfield) is a single-contributor hotspot with 33.9%
-maxspeed tagging, 3–10× any other county. Full write-up:
-[results/statewide/](results/statewide/README.md).
-Statewide OSM extracts (1.20 M buildings, 765 K roads) are on the
-[`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019).
+**(1)** Attribute completeness and edit recency are strongly urban-biased — several
+downstate counties have a median last edit of **2008** (untouched since the TIGER
+import) while Cook/DuPage/Will sit at 2016 and the campus tile at 2018.
+**(2)** Geometric supply is near-complete everywhere (km per 1,000 residents is
+*higher* rurally, ρ = −0.97): in the US, **bias lives in attributes and currency,
+not in whether the line exists**. **(3)** The gradient is not smooth — Sangamon
+County is a single-contributor hotspot (33.9% maxspeed, 3–10× any other county).
+Write-up: [results/statewide/](results/statewide/README.md).
 
-## From detection to correction
+## 5 · Correcting the bias (propose → score → prioritize)
 
-Detection is closed into a **propose → score → prioritize** loop, and — because the
-community filled 352 of the 547 detected gaps by 2026 — every proposal is scored
-against *what mappers actually drew*, with no manual labels. Three approaches are
-compared on the held-out east half (train west / eval east, as in Stage 2):
+Because the community filled 352 of our 547 detections, every machine proposal can be
+scored against *what mappers actually drew* — no manual labels. Three approaches,
+west-train / east-eval:
 
 | Approach | Geometry | Confidence | median IoU | AUC | precision@50 |
 |---|---|---|---|---|---|
@@ -104,18 +124,17 @@ compared on the held-out east half (train west / eval east, as in Stage 2):
 
 ![proposals vs community](results/correction/proposal_gallery.png)
 
-Takeaways: with only 83 training gaps, **rules beat learning for geometry** (the raw
-LiDAR footprint is itself the best overlap, 0.691 — regularization trades a little
-IoU for OSM-style right angles), but the **learned scorer wins where it matters for
-a human-review queue**: of its top-50 proposals, 84% were later confirmed by the
-community (base rate 65%). Proposals carry OSM-ready tags (`building=yes`,
-`height=*`) but remain research artifacts per the OSM Automated Edits Code of
-Conduct — the 195 still-unmapped proposals are ranked for human review
-(`results/correction/deployment_map.png`), and a statewide
-staleness × population map says where to deploy first
-(`results/correction/deploy_priority.png`: Cook, Lake, Winnebago on top).
-Scripts: `src/propose_geometry.py` · `src/propose_learned.py` ·
-`src/acceptance_scorer.py` · `src/correction_benchmark.py` · `src/deploy_priority.py`.
+With only 83 training gaps, **rules beat learning for geometry** (the raw LiDAR
+footprint is itself the best overlap at 0.691 — regularization trades a little IoU
+for OSM-style right angles). But the **learned scorer wins the human-review queue**:
+84% of its top-50 proposals were later confirmed by the community (base rate 65%).
+Proposals carry OSM-ready tags (`building=yes`, `height=*`) yet remain research
+artifacts per the OSM Automated Edits Code of Conduct: the 195 outstanding proposals
+are ranked for human review (`results/correction/deployment_map.png`), and a
+statewide **staleness × population-exposure** map points the pipeline at Cook, Lake
+and Winnebago first (`results/correction/deploy_priority.png`).
+
+---
 
 ## Quick start
 
@@ -124,10 +143,7 @@ pip install -r requirements.txt
 jupyter lab VGI_Spatial_Bias_Pipeline.ipynb   # end-to-end: downloads all data, runs every stage
 ```
 
-The notebook covers the **entire pipeline** (LiDAR detection → DGCNN segmentation →
-NAIP → buildings/roads VGI comparison → statewide bias) with a documented, explained
-step per stage, and runs unmodified on the I-GUIDE JupyterHub. Or run the scripts
-directly (in order — later ones reuse earlier outputs):
+Or run the scripts directly (in order — later stages reuse earlier outputs):
 
 ```bash
 python src/prepare_data.py           # fetch LiDAR + NAIP + statewide inputs (idempotent)
@@ -137,51 +153,58 @@ python src/naip_segmentation.py data/NAIP_image.tif            # land cover -> r
 python src/vgi_comparison.py data/osm_buildings_2019.geojson   # bias map -> results/comparison/
 python src/statewide_bias.py data/statewide/OSM_2019_Major_Roads/gis_osm_roads_2019_IL_Major_Roads.shp \
        data/statewide results/statewide                        # county gradient
+python src/propose_geometry.py && python src/acceptance_scorer.py && \
+       python src/propose_learned.py && python src/correction_benchmark.py && \
+       python src/deploy_priority.py                           # correction -> results/correction/
 ```
 
-Device auto-selects CUDA → Apple MPS → CPU; a full campus run takes ≈ 10–15 min.
+Device auto-selects CUDA → Apple MPS → CPU; a full campus run takes ≈ 15–25 min
+(DGCNN and the correction U-Net are optional flags in the notebook).
 
 ### Running on the I-GUIDE platform
 
-The notebook is designed for the [I-GUIDE JupyterHub](https://platform.i-guide.io):
-its bootstrap cell clones this repository automatically when the notebook is opened
+The notebook's bootstrap cell clones this repository automatically when opened
 standalone, and `src/prepare_data.py` fetches all inputs from public storage. Two
-platform specifics to know:
+platform specifics:
 
 - **Old geospatial stack.** The CyberGISX kernel ships Python 3.8, which caps
-  geopandas at ≤ 0.13 (`pip install` cannot upgrade it to 1.x there). The pipeline
-  supports both: `union_all()` falls back to `unary_union`, and
-  `read_file(columns=…)` falls back to reading all fields
-  (`src/road_evolution.py`, `src/statewide_bias.py`). If you hit an
-  `AttributeError`/`TypeError` pointing at a geopandas call, it is almost certainly
-  this class of version skew — please open an issue.
+  geopandas at ≤ 0.13. The pipeline supports both generations (`union_all` →
+  `unary_union` fallback, `read_file(columns=…)` fallback). A geopandas
+  `AttributeError`/`TypeError` is almost certainly this version skew — please open
+  an issue.
 - **Updating an existing clone.** The bootstrap cell clones only when the repo is
-  missing. To pick up upstream fixes in a running session:
-  `!git -C ~/vgi-spatial-bias pull`, then re-run the failed cell (earlier stages
-  keep their outputs; every step is idempotent).
+  missing; pick up fixes with `!git -C ~/vgi-spatial-bias pull`, then re-run the
+  failed cell (every step is idempotent).
 
 ## Repository layout
 
 ```
 VGI_Spatial_Bias_Pipeline.ipynb    end-to-end reproducible notebook (all stages, I-GUIDE-ready)
-src/                               pipeline scripts (detection, segmentation, comparison, NAIP, statewide)
-data/                              OSM 2019 campus subsets + CRS/bbox metadata
-docs/                              PROJECT_DESCRIPTION · METHODOLOGY · METRICS
-results/                           detection/ · segmentation/ · comparison/ · naip/ · statewide/ · correction/
+src/                               pipeline scripts (data prep, detection, segmentation,
+                                   comparison, statewide, correction)
+data/                              OSM 2019/2026 campus subsets + CRS/bbox metadata
+docs/                              PROJECT_DESCRIPTION · METHODOLOGY · METRICS · specs
+results/                           detection/ · segmentation/ · comparison/ · naip/ ·
+                                   statewide/ · correction/
 ```
 
-Large / regenerable artifacts (`.laz`, `.tif`, caches) are gitignored — the notebook
-downloads the point cloud from I-GUIDE storage and the scripts recreate the rest.
+Large / regenerable artifacts (`.laz`, `.tif`, caches, downloads) are gitignored —
+the notebook fetches the point cloud from I-GUIDE storage and recreates the rest.
 
 ## Data sources
 
-- **LiDAR:** USGS 3DEP `IL_8County_PlusChampaign_2019_B19` (QL1), EPSG:6350 / NAVD88.
-- **OSM 2019:** Illinois statewide shapefiles (WGS84), incl. the county-joined major-roads
-  extract used by `src/statewide_bias.py` — see the release above.
-- **NAIP:** 4-band aerial imagery, ~0.7 m, fused with LiDAR for the impervious/paved layers.
-- **Census 2019:** county land area (gazetteer), population (`co-est2019`), and cartographic
-  boundaries — normalization covariates for the statewide analysis.
+- **LiDAR** — USGS 3DEP `IL_8County_PlusChampaign_2019_B19` (QL1), EPSG:6350/NAVD88,
+  via [I-GUIDE storage](https://storage.i-guide.io).
+- **NAIP** — 4-band aerial imagery, ~0.7 m, on the
+  [`campus-rs-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/campus-rs-2019).
+- **OSM 2019** — Illinois statewide extracts (1.20 M buildings, 765 K roads, plus the
+  county-joined major-roads file) on the
+  [`osm-il-2019` release](https://github.com/rayford295/vgi-spatial-bias/releases/tag/osm-il-2019);
+  OSM 2026 snapshots committed in `data/`. © OpenStreetMap contributors (ODbL).
+- **Census 2019** — county land area, population estimates and cartographic
+  boundaries (public census.gov static files).
 
 ## License
 
-MIT for code (see [LICENSE](LICENSE)); USGS 3DEP data is public domain.
+MIT for code (see [LICENSE](LICENSE)); USGS 3DEP LiDAR and USDA NAIP are public
+domain; OSM data is ODbL.
