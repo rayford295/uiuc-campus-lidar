@@ -12,6 +12,8 @@ itself later mapped. Two study regions anchor the method:
 | **UIUC campus** (Urbana, IL) | 2 × 2 km | QL1, ~20 pts/m², fully classified | 58.3% count / 79.4% area |
 | **Colorado Springs** (CO) | 2 × 2 km | ~5 pts/m², ground-only classes | **29.1% count / 67.6% area** |
 
+🌐 **Project website**: <https://rayford295.github.io/vgi-spatial-bias/>
+
 ▶ **Run everything**: [`VGI_Spatial_Bias_Pipeline.ipynb`](VGI_Spatial_Bias_Pipeline.ipynb)
 — one notebook, all stages, pre-executed with figures, runs unmodified on the
 [I-GUIDE JupyterHub](https://platform.i-guide.io). Also published as an
