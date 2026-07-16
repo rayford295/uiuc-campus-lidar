@@ -1,0 +1,16 @@
+{
+  "resolution_m": 0.5,
+  "grid": [
+    4154,
+    4154
+  ],
+  "vegetation_source": "NDVI+echo",
+  "buildings": {
+    "count": 2122,
+    "total_footprint_m2": 602276.3,
+    "median_height_m": 3.3
+  },
+  "trees": {
+    "count": 12138
+  }
+}

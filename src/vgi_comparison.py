@@ -23,8 +23,13 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "comparison", *(sys.argv[2:3])); os.makedirs(OUT, exist_ok=True)
-LIDAR = os.path.join(ROOT, "results", "detection", "buildings.geojson")
+# argv[2]: bare name -> subdir of results/comparison; a path (contains /) is used as-is
+_sub = sys.argv[2] if len(sys.argv) > 2 else ""
+OUT = _sub if os.sep in _sub else os.path.join(ROOT, "results", "comparison", *([_sub] if _sub else []))
+os.makedirs(OUT, exist_ok=True)
+# argv[3]: optional LiDAR buildings layer (defaults to the campus detection)
+LIDAR = sys.argv[3] if len(sys.argv) > 3 else os.path.join(
+    ROOT, "results", "detection", "buildings.geojson")
 REF = sys.argv[1] if len(sys.argv) > 1 else None
 if not REF or not os.path.exists(REF):
     sys.exit("usage: python src/vgi_comparison.py <reference_buildings.shp|.geojson>\n"

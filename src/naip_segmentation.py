@@ -29,12 +29,19 @@ from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "naip"); os.makedirs(OUT, exist_ok=True)
-LIDAR_BLDG = os.path.join(ROOT, "results", "detection", "buildings.geojson")
 if len(sys.argv) < 2 or not os.path.exists(sys.argv[1]):
-    sys.exit("usage: python src/naip_segmentation.py <NAIP_image.tif>")
+    sys.exit("usage: python src/naip_segmentation.py <NAIP_image.tif> "
+             "[lidar_buildings.geojson] [out_dir]")
 NAIP = sys.argv[1]
-TILE = (655000, 1925000, 657000, 1927000)      # EPSG:6350, matches LiDAR
+LIDAR_BLDG = sys.argv[2] if len(sys.argv) > 2 else os.path.join(
+    ROOT, "results", "detection", "buildings.geojson")
+OUT = sys.argv[3] if len(sys.argv) > 3 else os.path.join(ROOT, "results", "naip")
+os.makedirs(OUT, exist_ok=True)
+if len(sys.argv) > 2:      # region mode: the raster is already clipped to the tile
+    with rasterio.open(NAIP) as _ds:
+        TILE = tuple(_ds.bounds)
+else:
+    TILE = (655000, 1925000, 657000, 1927000)  # EPSG:6350, campus LiDAR tile
 
 with rasterio.open(NAIP) as ds:
     win = from_bounds(*TILE, transform=ds.transform)

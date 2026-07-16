@@ -8,6 +8,7 @@ results/**/*.npz
 data/NAIP_image.tif
 data/lidar_tiles/
 data/statewide/
+regions/**/*.tif
 
 # macOS / editor junk
 .DS_Store

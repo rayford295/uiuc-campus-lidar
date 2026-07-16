@@ -18,7 +18,10 @@ from shapely.ops import unary_union, polygonize
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAG = sys.argv[2] if len(sys.argv) > 2 else "building"
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "data", f"osm_{TAG}_current.geojson")
-S, W, N, E = 40.0990944, -88.2402753, 40.1183436, -88.2147506   # campus tile, WGS84
+if len(sys.argv) > 3:      # optional "S,W,N,E" bbox (WGS84) for other regions
+    S, W, N, E = (float(v) for v in sys.argv[3].split(","))
+else:
+    S, W, N, E = 40.0990944, -88.2402753, 40.1183436, -88.2147506   # campus tile
 
 elems = f'way["{TAG}"]({S},{W},{N},{E});'
 if TAG == "building":

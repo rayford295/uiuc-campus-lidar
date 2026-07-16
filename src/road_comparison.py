@@ -34,9 +34,18 @@ WIDTH = {"motorway": 15, "trunk": 14, "primary": 12, "secondary": 10, "tertiary"
          "track": 3, "cycleway": 3, "footway": 2.5, "path": 2, "steps": 2}
 DEFAULT_W = 4.0
 
-src = rasterio.open(PAVED)
-paved = src.read(1)
-paved_area_px = float(abs(src.res[0] * src.res[1]))
+src = paved = paved_area_px = None
+
+
+def init(paved_path=PAVED, out_dir=None):
+    """Lazy raster setup so other regions can point at their own paved layer."""
+    global src, paved, paved_area_px, OUT
+    if out_dir:
+        OUT = out_dir
+    os.makedirs(OUT, exist_ok=True)
+    src = rasterio.open(paved_path)
+    paved = src.read(1)
+    paved_area_px = float(abs(src.res[0] * src.res[1]))
 
 def buffer_width(fc):
     return WIDTH.get(str(fc).split("_")[0], DEFAULT_W)
@@ -59,6 +68,8 @@ def paved_fraction(geom):
     return float(sub[m].mean()) if m.any() else np.nan
 
 def analyse(tag, path):
+    if src is None:
+        init()
     g = gpd.read_file(path).to_crs(src.crs)
     g = gpd.clip(g, shapely_box(*src.bounds)).explode(index_parts=False)  # NAIP coverage only
     g = g[g.geometry.length > 1].reset_index(drop=True)
@@ -107,7 +118,15 @@ def analyse(tag, path):
 import rasterio.plot  # noqa: E402  (used above for plotting_extent)
 
 if __name__ == "__main__":
-    out = {y: analyse(y, os.path.join(ROOT, "data", f"osm_roads_{y}.geojson")) for y in ("2019", "2026")}
+    import sys
+    if len(sys.argv) > 3:
+        # region mode: <paved.tif> <out_dir> <tag=roads.geojson> [...]
+        init(sys.argv[1], sys.argv[2])
+        runs = dict(a.split("=", 1) for a in sys.argv[3:])
+    else:
+        runs = {y: os.path.join(ROOT, "data", f"osm_roads_{y}.geojson")
+                for y in ("2019", "2026")}
+    out = {tag: analyse(tag, path) for tag, path in runs.items()}
     json.dump(out, open(os.path.join(OUT, "roads_summary.json"), "w"), indent=2)
     print(json.dumps({y: {k: v for k, v in r.items() if k != "by_class"} for y, r in out.items()}, indent=2))
     print("done ->", OUT)

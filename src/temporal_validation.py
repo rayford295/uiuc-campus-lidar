@@ -18,8 +18,13 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
+import sys
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "comparison", "temporal"); os.makedirs(OUT, exist_ok=True)
+# optional region args: <lidar.geojson> <osm_old.geojson> <osm_new.geojson> <out_dir>
+_A = sys.argv[1:]
+OUT = _A[3] if len(_A) > 3 else os.path.join(ROOT, "results", "comparison", "temporal")
+os.makedirs(OUT, exist_ok=True)
 CRS, IOU_THR, MIN_AREA, GRID = 6350, 0.3, 5.0, 250.0
 
 def load(path):
@@ -35,9 +40,9 @@ def best_iou(lid, ref):
     iou = inter / (lid.area.values[pairs.index.values] + ref.area.values[pairs.index_right.values] - inter)
     return pairs.assign(iou=iou).groupby(level=0)["iou"].max().reindex(range(len(lid))).fillna(0).values
 
-lid = load(os.path.join(ROOT, "results", "detection", "buildings.geojson"))
-o19 = load(os.path.join(ROOT, "data", "osm_buildings_2019.geojson"))
-o26 = load(os.path.join(ROOT, "data", "osm_buildings_2026.geojson"))
+lid = load(_A[0] if _A else os.path.join(ROOT, "results", "detection", "buildings.geojson"))
+o19 = load(_A[1] if len(_A) > 1 else os.path.join(ROOT, "data", "osm_buildings_2019.geojson"))
+o26 = load(_A[2] if len(_A) > 2 else os.path.join(ROOT, "data", "osm_buildings_2026.geojson"))
 
 lid["in19"] = best_iou(lid, o19) >= IOU_THR
 lid["in26"] = best_iou(lid, o26) >= IOU_THR

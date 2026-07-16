@@ -1,0 +1,9 @@
+{
+  "resolution_m": 0.6,
+  "vegetation_pct": 28.6,
+  "impervious_pct": 70.4,
+  "building_m2": 582840,
+  "paved_m2": 2260139,
+  "vegetation_m2": 1232241,
+  "note": "building = NAIP impervious \u2229 LiDAR footprint; paved = roads+parking+sidewalks"
+}
