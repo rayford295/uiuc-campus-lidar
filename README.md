@@ -113,6 +113,25 @@ python src/statewide_bias.py data/statewide/OSM_2019_Major_Roads/gis_osm_roads_2
 
 Device auto-selects CUDA → Apple MPS → CPU; a full campus run takes ≈ 10–15 min.
 
+### Running on the I-GUIDE platform
+
+The notebook is designed for the [I-GUIDE JupyterHub](https://platform.i-guide.io):
+its bootstrap cell clones this repository automatically when the notebook is opened
+standalone, and `src/prepare_data.py` fetches all inputs from public storage. Two
+platform specifics to know:
+
+- **Old geospatial stack.** The CyberGISX kernel ships Python 3.8, which caps
+  geopandas at ≤ 0.13 (`pip install` cannot upgrade it to 1.x there). The pipeline
+  supports both: `union_all()` falls back to `unary_union`, and
+  `read_file(columns=…)` falls back to reading all fields
+  (`src/road_evolution.py`, `src/statewide_bias.py`). If you hit an
+  `AttributeError`/`TypeError` pointing at a geopandas call, it is almost certainly
+  this class of version skew — please open an issue.
+- **Updating an existing clone.** The bootstrap cell clones only when the repo is
+  missing. To pick up upstream fixes in a running session:
+  `!git -C ~/vgi-spatial-bias pull`, then re-run the failed cell (earlier stages
+  keep their outputs; every step is idempotent).
+
 ## Repository layout
 
 ```
