@@ -23,6 +23,7 @@ Usage:  python src/propose_geometry.py
 import json
 import math
 import os
+import sys
 import warnings
 
 import geopandas as gpd
@@ -31,10 +32,15 @@ from shapely import affinity
 from shapely.geometry import Polygon
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "uiuc_campus", "correction")
+REGION = sys.argv[1] if len(sys.argv) > 1 else "uiuc_campus"
+DATA = os.path.join(ROOT, "data", REGION)
+RES = os.path.join(ROOT, "results", REGION)
+OUT = os.path.join(RES, "correction")
+# fixed west/east split line per region (tile midline, same as the DGCNN split)
+SPLIT_X_BY_REGION = {"uiuc_campus": 656000.0, "colorado_springs": -752834.5}
 os.makedirs(OUT, exist_ok=True)
 CRS, IOU_THR = 6350, 0.3
-SPLIT_X = 656000.0          # tile midline: west = train, east = eval (same as DGCNN)
+SPLIT_X = SPLIT_X_BY_REGION.get(REGION)  # None -> bounds midline in main()
 FILL_THR, SIMPLIFY_TOL = 0.8, 1.5
 
 
@@ -107,21 +113,21 @@ def best_match(gaps, ref):
 
 
 def main():
-    gaps = gpd.read_file(os.path.join(ROOT, "results", "uiuc_campus", "comparison",
-                                      "omissions.geojson")).to_crs(CRS)
+    gaps = gpd.read_file(os.path.join(RES, "comparison", "omissions.geojson")).to_crs(CRS)
     gaps["geometry"] = gaps.geometry.buffer(0)
     gaps = gaps.reset_index(drop=True)
     gaps["gap_id"] = gaps.index
 
-    o26 = gpd.read_file(os.path.join(ROOT, "data", "uiuc_campus",
-                                     "osm_buildings_2026.geojson")).to_crs(CRS)
+    o26 = gpd.read_file(os.path.join(DATA, "osm_buildings_2026.geojson")).to_crs(CRS)
     o26["geometry"] = o26.geometry.buffer(0)
     o26 = o26[o26.area >= 5.0].reset_index(drop=True)
 
     iou, idx = best_match(gaps, o26)
     gaps["filled"] = iou >= IOU_THR
     gaps["truth_iou"] = iou.round(3)
-    gaps["east"] = gaps.geometry.centroid.x >= SPLIT_X
+    split = SPLIT_X if SPLIT_X is not None else (
+        (gaps.total_bounds[0] + gaps.total_bounds[2]) / 2)
+    gaps["east"] = gaps.geometry.centroid.x >= split
 
     props, flags = zip(*(regularize(g) for g in gaps.geometry))
     proposals = gpd.GeoDataFrame(

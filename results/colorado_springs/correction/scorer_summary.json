@@ -1,0 +1,19 @@
+{
+  "train_gaps": 1048,
+  "train_filled": 821,
+  "eval_gaps": 456,
+  "eval_filled": 304,
+  "auc_rule_tiers": 0.656,
+  "auc_gbm": 0.985,
+  "precision_at_50_rule": 0.46,
+  "precision_at_50_gbm": 0.98,
+  "base_rate_eval": 0.667,
+  "gbm_feature_importance": {
+    "area_m2": 0.679,
+    "height_m": 0.053,
+    "imperv_frac": 0.025,
+    "dist_road": 0.115,
+    "neigh_completeness": 0.089,
+    "fill_ratio": 0.04
+  }
+}

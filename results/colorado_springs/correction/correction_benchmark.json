@@ -1,0 +1,39 @@
+{
+  "geometry_east_filled": {
+    "rule (A/C)": {
+      "n": 304,
+      "median_iou": 0.662,
+      "mean_iou": 0.647,
+      "median_centroid_off_m": 1.73,
+      "median_area_ratio": 0.87
+    },
+    "learned (B)": {
+      "n": 304,
+      "median_iou": 0.769,
+      "mean_iou": 0.75,
+      "median_centroid_off_m": 0.9,
+      "median_area_ratio": 1.05
+    },
+    "raw LiDAR": {
+      "n": 304,
+      "median_iou": 0.678,
+      "mean_iou": 0.655,
+      "median_centroid_off_m": 1.59,
+      "median_area_ratio": 0.82
+    }
+  },
+  "confidence_east": {
+    "auc": {
+      "rule_tiers": 0.656,
+      "gbm": 0.985,
+      "unet_mask": 0.79
+    },
+    "precision_at_50": {
+      "rule_tiers": 0.46,
+      "gbm": 1.0,
+      "unet_mask": 0.6
+    },
+    "base_rate": 0.667,
+    "eval_gaps": 456
+  }
+}

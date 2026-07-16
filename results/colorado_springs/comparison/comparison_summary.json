@@ -1,5 +1,5 @@
 {
-  "reference": "osm_buildings_2019_cs.geojson",
+  "reference": "osm_buildings_2019.geojson",
   "iou_threshold": 0.3,
   "lidar_buildings": 2122,
   "reference_buildings": 701,

@@ -19,6 +19,7 @@ Writes results/correction/correction_benchmark.json + 3 figures.
 """
 import json
 import os
+import sys
 
 import geopandas as gpd
 import matplotlib
@@ -29,7 +30,12 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "uiuc_campus", "correction")
+REGION = sys.argv[1] if len(sys.argv) > 1 else "uiuc_campus"
+DATA = os.path.join(ROOT, "data", REGION)
+RES = os.path.join(ROOT, "results", REGION)
+OUT = os.path.join(RES, "correction")
+# fixed west/east split line per region (tile midline, same as the DGCNN split)
+SPLIT_X_BY_REGION = {"uiuc_campus": 656000.0, "colorado_springs": -752834.5}
 CRS = 6350
 C_RULE, C_LEARN, C_TRUTH, C_RAW = "#2a78d6", "#eb6834", "#008300", "#b0aea5"
 
@@ -129,8 +135,7 @@ def main():
 
     # ---- figure 2: deployment map (still-unmapped, ranked) ---------------
     todo = gaps[~gaps.filled].merge(scores[["gap_id", "gbm_prob"]], on="gap_id")
-    o19 = gpd.read_file(os.path.join(ROOT, "data", "uiuc_campus",
-                                     "osm_buildings_2019.geojson")).to_crs(CRS)
+    o19 = gpd.read_file(os.path.join(DATA, "osm_buildings_2019.geojson")).to_crs(CRS)
     fig, ax = plt.subplots(figsize=(10, 10))
     o19.plot(ax=ax, color="#e8e6dc")
     todo.plot(ax=ax, column="gbm_prob", cmap="Blues", legend=True,

@@ -36,6 +36,7 @@ URLS = {
 
 URLS["cs_lidar"] = f"{RELEASE}/colorado-springs-2019/cs_lidar_2km.laz"
 URLS["cs_naip"] = f"{RELEASE}/colorado-springs-2019/colorado_springs_NAIP_clipped_6350.tif"
+URLS["lidar_merged"] = f"{RELEASE}/campus-rs-2019/UIUC_campus_LiDAR_merged_2x2km.laz"
 
 LAZ = os.path.join(ROOT, "data", "uiuc_campus", "UIUC_campus_LiDAR_merged_2x2km.laz")
 NAIP = os.path.join(DATA, "uiuc_campus", "NAIP_image.tif")
@@ -57,11 +58,16 @@ def fetch(url, dest):
 
 
 def prepare_lidar():
-    """I-GUIDE zip holds 4 x 1 km tiles; the scripts expect one merged cloud."""
+    """Merged cloud from the GitHub release; I-GUIDE tile zip as fallback."""
     print("[lidar]")
     if os.path.exists(LAZ):
         print(f"  already present: {os.path.basename(LAZ)}")
         return
+    try:
+        fetch(URLS["lidar_merged"], LAZ)
+        return
+    except Exception as e:  # release unavailable -> merge the I-GUIDE tiles
+        print(f"  release download failed ({e}); merging I-GUIDE tiles instead")
     import glob
 
     import laspy
@@ -113,7 +119,7 @@ def prepare_colorado():
     """Second study region (LiDAR + clipped NAIP; OSM clips are committed)."""
     print("[colorado]")
     fetch(URLS["cs_lidar"], os.path.join(CS_DATA, "cs_lidar_2km.laz"))
-    fetch(URLS["cs_naip"], os.path.join(CS_DATA, "naip_cs_6350.tif"))
+    fetch(URLS["cs_naip"], os.path.join(CS_DATA, "NAIP_image.tif"))
 
 
 STEPS = {"lidar": prepare_lidar, "naip": prepare_naip,

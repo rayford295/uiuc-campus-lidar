@@ -21,6 +21,7 @@ Usage:  python src/acceptance_scorer.py
 """
 import json
 import os
+import sys
 
 import geopandas as gpd
 import numpy as np
@@ -34,7 +35,12 @@ from sklearn.metrics import roc_auc_score
 from propose_geometry import best_match
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "results", "uiuc_campus", "correction")
+REGION = sys.argv[1] if len(sys.argv) > 1 else "uiuc_campus"
+DATA = os.path.join(ROOT, "data", REGION)
+RES = os.path.join(ROOT, "results", REGION)
+OUT = os.path.join(RES, "correction")
+# fixed west/east split line per region (tile midline, same as the DGCNN split)
+SPLIT_X_BY_REGION = {"uiuc_campus": 656000.0, "colorado_springs": -752834.5}
 CRS, NEIGH_M, TOP_K = 6350, 100.0, 50
 
 
@@ -65,13 +71,12 @@ def raster_fraction(src, band, geoms):
 
 def build_features(gaps):
     # NAIP impervious = building OR paved (both binary rasters from stage 3)
-    with rasterio.open(os.path.join(ROOT, "results", "uiuc_campus", "naip", "naip_building.tif")) as b, \
-         rasterio.open(os.path.join(ROOT, "results", "uiuc_campus", "naip", "naip_paved.tif")) as p:
+    with rasterio.open(os.path.join(RES, "naip", "naip_building.tif")) as b, \
+         rasterio.open(os.path.join(RES, "naip", "naip_paved.tif")) as p:
         imperv = ((b.read(1) > 0) | (p.read(1) > 0)).astype("uint8")
         gaps["imperv_frac"] = raster_fraction(b, imperv, gaps.geometry)
 
-    roads = gpd.read_file(os.path.join(ROOT, "data", "uiuc_campus",
-                                       "osm_roads_2019.geojson")).to_crs(CRS)
+    roads = gpd.read_file(os.path.join(DATA, "osm_roads_2019.geojson")).to_crs(CRS)
     try:
         _, dist = roads.sindex.nearest(gaps.geometry, return_distance=True,
                                        return_all=False)
@@ -82,11 +87,9 @@ def build_features(gaps):
 
     # neighborhood completeness: share of LiDAR buildings within 100 m that
     # OSM had mapped in 2019 (contributor attention around the gap)
-    lid = gpd.read_file(os.path.join(ROOT, "results", "uiuc_campus", "detection",
-                                     "buildings.geojson")).to_crs(CRS)
+    lid = gpd.read_file(os.path.join(RES, "detection", "buildings.geojson")).to_crs(CRS)
     lid["geometry"] = lid.geometry.buffer(0)
-    o19 = gpd.read_file(os.path.join(ROOT, "data", "uiuc_campus",
-                                     "osm_buildings_2019.geojson")).to_crs(CRS)
+    o19 = gpd.read_file(os.path.join(DATA, "osm_buildings_2019.geojson")).to_crs(CRS)
     o19["geometry"] = o19.geometry.buffer(0)
     o19 = o19[o19.area >= 5.0].reset_index(drop=True)
     iou, _ = best_match(lid, o19)

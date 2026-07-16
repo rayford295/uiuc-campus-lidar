@@ -14,7 +14,9 @@ itself later mapped. Two study regions anchor the method:
 
 ▶ **Run everything**: [`VGI_Spatial_Bias_Pipeline.ipynb`](VGI_Spatial_Bias_Pipeline.ipynb)
 — one notebook, all stages, pre-executed with figures, runs unmodified on the
-[I-GUIDE JupyterHub](https://platform.i-guide.io).
+[I-GUIDE JupyterHub](https://platform.i-guide.io). Also published as an
+[I-GUIDE notebook knowledge element](https://platform.i-guide.io/notebooks/43edf307-c6af-4d1f-948b-260a0092a2c0)
+(notebook + dataset links).
 An [I-GUIDE Summer School 2026 project](https://i-guide.io/summer-school/summer-school-2026/summer-school-2026-projects/).
 Framing: [PROJECT_DESCRIPTION](docs/PROJECT_DESCRIPTION.md) ·
 [METHODOLOGY](docs/METHODOLOGY.md) · [METRICS](docs/METRICS.md).
@@ -41,6 +43,7 @@ Framing: [PROJECT_DESCRIPTION](docs/PROJECT_DESCRIPTION.md) ·
 | 4 | Quality follows contributors, not need | edit recency ρ = 0.70 with pop. density; downstate frozen at 2008 (TIGER) |
 | 5 | Correction works — and hybrid wins | proposal median IoU 0.68; learned scorer precision@50 = 0.84 (base 0.65) |
 | 6 | The method generalizes | Colorado Springs, ground-only LiDAR: 74.8% of detected gaps community-confirmed |
+| 7 | Correction winners flip with label volume | CS (821 labels): U-Net geometry IoU 0.769 > rules; GBM scorer AUC 0.985, P@50 = 1.00 |
 
 ---
 
@@ -167,6 +170,23 @@ attributes, not the road network. (Semi-arid caveat: dry ground depresses NDVI a
 inflates the NAIP impervious class, so the *reverse* explained-paved metric is not
 comparable across regions; forward road support is unaffected.)
 
+**Correction transfers too — and the winners flip with label volume.** The same
+`propose → score` stage reruns with one region argument; Colorado Springs supplies
+821 community-confirmed training gaps (10× the campus) and 304 held-out ones:
+
+| | UIUC campus (83 training gaps) | Colorado Springs (821) |
+|---|---|---|
+| geometry median IoU | rules **0.677** > U-Net 0.589 | U-Net **0.769** > rules 0.662 |
+| confidence AUC / precision@50 | GBM 0.738 / **0.84** | GBM **0.985 / 1.00** |
+
+With scarce labels, regularization rules are the safer geometry; once the community
+has confirmed enough examples, the U-Net learns local building style and overtakes
+them — and the learned acceptance scorer dominates in both regions (a perfect
+top-50 on CS). Practical recipe: *rules first, swap in learning as confirmations
+accumulate, always rank the review queue with the learned scorer.* The 379
+still-unmapped CS buildings ship as ranked proposals
+(`results/colorado_springs/correction/deployment_map.png`).
+
 ---
 
 ## Quick start
@@ -192,8 +212,8 @@ python src/propose_geometry.py && python src/acceptance_scorer.py && \
 # second region (Colorado Springs) — same pipeline, explicit region paths:
 python src/prepare_data.py colorado
 python src/region_detection.py data/colorado_springs/cs_lidar_2km.laz \
-       data/colorado_springs/naip_cs_6350.tif results/colorado_springs/detection
-python src/vgi_comparison.py data/colorado_springs/osm_buildings_2019_cs.geojson \
+       data/colorado_springs/NAIP_image.tif results/colorado_springs/detection
+python src/vgi_comparison.py data/colorado_springs/osm_buildings_2019.geojson \
        results/colorado_springs/comparison results/colorado_springs/detection/buildings.geojson
 ```
 
