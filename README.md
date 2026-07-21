@@ -23,6 +23,20 @@ An [I-GUIDE Summer School 2026 project](https://i-guide.io/summer-school/summer-
 Framing: [PROJECT_DESCRIPTION](docs/PROJECT_DESCRIPTION.md) ·
 [METHODOLOGY](docs/METHODOLOGY.md) · [METRICS](docs/METRICS.md).
 
+## I-GUIDE Summer School 2026
+
+<p align="center">
+  <img src="docs/assets/iguide-2026/summer-school-main-quad.jpeg" alt="I-GUIDE Summer School 2026 participants gathered at the University of Illinois Main Quad" width="920">
+</p>
+
+<p align="center"><em>I-GUIDE Summer School 2026 cohort, University of Illinois Main Quad.</em></p>
+
+<p align="center">
+  <img src="docs/assets/iguide-2026/vgi-spatial-bias-project-team.png" alt="VGI spatial-bias project team at I-GUIDE Summer School 2026" width="760">
+</p>
+
+<p align="center"><em>VGI spatial-bias project team at I-GUIDE Summer School 2026.</em></p>
+
 ## The pipeline
 
 ```
